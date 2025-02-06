@@ -1,0 +1,22 @@
+services:
+  pgvectordb:
+    image: ankane/pgvector:latest 
+    container_name: pgvectordb
+    environment:
+      POSTGRES_USER: pgvectordb
+      POSTGRES_PASSWORD: pgvectordb_secret
+      POSTGRES_DB: pgvectordb
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pgvector
+
+networks:
+  pgvector: 
+    external: true
+
+volumes:
+  postgres_data:
+    name: pgvectordb

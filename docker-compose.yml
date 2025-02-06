@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    container_name: pgvector
+    env_file:
+      - .env
+    ports:
+      - 8080:8080
+    networks:
+      - pgvector
+
+
+networks:
+  pgvector: 
+    external: true
+
