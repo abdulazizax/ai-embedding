@@ -4,35 +4,37 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
-	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
-)
-
-const (
-	apiKey = "AIzaSyDdsVVKIqddYVkS8FxrsfCsFx6TIXNvsA4"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 func main() {
-	ctx := context.Background()
-
-	// Create a client
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
-	if err != nil {
-		log.Fatal(err)
+	// OpenAI API kalitini o'rnating
+	apiKey := os.Getenv("OPENAI_API_KEY") // Environment variable dan olish
+	if apiKey == "" {
+		log.Fatal("OPENAI_API_KEY muhit o'zgaruvchisi topilmadi")
 	}
-	defer client.Close()
 
-	// Choose a model
-	model := client.EmbeddingModel("embedding-001")
+	// OpenAI clientini yaratish
+	client := openai.NewClient(apiKey)
 
+	// Embedding generatsiya qilish uchun matn
 	text := "Go tilida AI dasturlash"
-	resp, err := model.EmbedContent(ctx, genai.Text(text))
+
+	// Embedding so'rovini yuborish
+	req := openai.EmbeddingRequest{
+		Input: []string{text},
+		Model: openai.AdaEmbeddingV2, // Modelni tanlash
+	}
+	resp, err := client.CreateEmbeddings(context.Background(), req)
 	if err != nil {
-		log.Fatalf("Embedding xatosi: %v", err)
+		log.Fatalf("Embedding generatsiya qilishda xato: %v", err)
 	}
 
+	// Natijani ko'rsatish
+	embedding := resp.Data[0].Embedding // Birinchi matn uchun embedding
 	fmt.Printf("Matn: %s\n", text)
-	fmt.Printf("Embedding o'lchami: %d\n", len(resp.Embedding.Values))
-	fmt.Printf("Dastlabki 3 qiymat: %v\n", resp.Embedding.Values[:3])
+	fmt.Printf("Embedding o'lchami: %d\n", len(embedding))
+	fmt.Printf("Dastlabki 3 qiymat: %v\n", embedding[:3])
 }

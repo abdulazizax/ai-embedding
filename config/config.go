@@ -14,6 +14,7 @@ type (
 		Log    `yaml:"logger"`
 		PG     `yaml:"postgres"`
 		Gemini `yaml:"gemini"`
+		OpenAI `yaml:"openai"`
 	}
 
 	// App -.
@@ -41,6 +42,11 @@ type (
 	// Gemini -.
 	Gemini struct {
 		ApiKey string `env-required:"true" yaml:"api_key" env:"GEMINI_API_KEY"`
+	}
+
+	// OpenAI -.
+	OpenAI struct {
+		ApiKey string `env-required:"true" yaml:"api_key" env:"OPENAI_API_KEY"`
 	}
 )
 

@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -11,24 +12,24 @@ import (
 	"github.com/abdulazizax/ai-embedding/internal/entity"
 	"github.com/abdulazizax/ai-embedding/pkg/logger"
 	"github.com/abdulazizax/ai-embedding/pkg/postgres"
-	"github.com/google/generative-ai-go/genai"
 	"github.com/google/uuid"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 type MovieRepo struct {
-	genaiClient *genai.Client
-	pg          *postgres.Postgres
-	config      *config.Config
-	logger      *logger.Logger
+	openaiClient *openai.Client
+	pg           *postgres.Postgres
+	config       *config.Config
+	logger       *logger.Logger
 }
 
 // New -.
-func NewMovieRepo(genaiClient *genai.Client, pg *postgres.Postgres, config *config.Config, logger *logger.Logger) *MovieRepo {
+func NewMovieRepo(openaiClient *openai.Client, pg *postgres.Postgres, config *config.Config, logger *logger.Logger) *MovieRepo {
 	return &MovieRepo{
-		genaiClient: genaiClient,
-		pg:          pg,
-		config:      config,
-		logger:      logger,
+		openaiClient: openaiClient,
+		pg:           pg,
+		config:       config,
+		logger:       logger,
 	}
 }
 
@@ -268,17 +269,16 @@ func (r *MovieRepo) Search(ctx context.Context, req entity.MovieSingleRequest) (
 }
 
 func (r *MovieRepo) generateVector(movie *entity.Movie) ([]float32, error) {
-	ctx := context.Background()
-
-	// Choose a model
-	model := r.genaiClient.EmbeddingModel("text-embedding-004")
-
-	resp, err := model.EmbedContent(ctx, genai.Text(movie.NameUz), genai.Text(movie.NameEn), genai.Text(movie.NameRu))
+	req := openai.EmbeddingRequest{
+		Input: []string{movie.NameUz, movie.NameEn, movie.NameRu},
+		Model: openai.AdaEmbeddingV2,
+	}
+	resp, err := r.openaiClient.CreateEmbeddings(context.Background(), req)
 	if err != nil {
-		return nil, err
+		log.Fatalf("Embedding generatsiya qilishda xato: %v", err)
 	}
 
-	return resp.Embedding.Values, nil
+	return resp.Data[0].Embedding, nil
 }
 
 func formatVectorLiteral(vector []float32) string {

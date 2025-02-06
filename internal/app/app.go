@@ -2,15 +2,12 @@
 package app
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
 
 	"github.com/abdulazizax/ai-embedding/config"
 	v1 "github.com/abdulazizax/ai-embedding/internal/controller/http/v1"
@@ -18,6 +15,7 @@ import (
 	"github.com/abdulazizax/ai-embedding/pkg/httpserver"
 	"github.com/abdulazizax/ai-embedding/pkg/logger"
 	"github.com/abdulazizax/ai-embedding/pkg/postgres"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 // Run creates objects via constructors.
@@ -31,14 +29,10 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
-	genaiClient, err := genai.NewClient(context.Background(), option.WithAPIKey(cfg.ApiKey))
-	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - genai.NewClient: %w", err))
-	}
-	defer genaiClient.Close()
+	openaiClient := openai.NewClient(cfg.OpenAI.ApiKey)
 
 	// Use case
-	useCase := usecase.New(genaiClient, pg, cfg, l)
+	useCase := usecase.New(openaiClient, pg, cfg, l)
 
 	// HTTP Server
 	handler := gin.New()
